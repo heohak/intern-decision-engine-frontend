@@ -6,6 +6,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:inbank_frontend/fonts.dart';
 import 'package:inbank_frontend/widgets/national_id_field.dart';
+import 'package:inbank_frontend/widgets/country_dropdown.dart';
 
 import '../api_service.dart';
 import '../colors.dart';
@@ -27,13 +28,14 @@ class _LoanFormState extends State<LoanForm> {
   int _loanAmountResult = 0;
   int _loanPeriodResult = 0;
   String _errorMessage = '';
+  String _selectedCountry = 'Estonia';
 
   // Submit the form and update the state with the loan decision results.
   // Only submits if the form inputs are validated.
   void _submitForm() async {
     if (_formKey.currentState!.validate()) {
       final result = await _apiService.requestLoanDecision(
-          _nationalId, _loanAmount, _loanPeriod);
+          _nationalId, _loanAmount, _loanPeriod, _selectedCountry);
       setState(() {
         int tempAmount = int.parse(result['loanAmount'].toString());
         int tempPeriod = int.parse(result['loanPeriod'].toString());
@@ -61,6 +63,7 @@ class _LoanFormState extends State<LoanForm> {
     final screenWidth = MediaQuery.of(context).size.width;
     final formWidth = screenWidth / 3;
     const minWidth = 500.0;
+
     return Expanded(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -84,11 +87,21 @@ class _LoanFormState extends State<LoanForm> {
                               });
                             },
                           ),
+                          SizedBox(height: 10),
+                          CountryDropdown(
+                            selectedCountry: _selectedCountry,
+                            onCountryChanged: (newValue) {
+                              setState(() {
+                                _selectedCountry = newValue!;
+                                _submitForm();
+                              });
+                            },
+                          ),
                         ],
                       );
                     },
                   ),
-                  const SizedBox(height: 60.0),
+                  const SizedBox(height: 30.0),
                   Text('Loan Amount: $_loanAmount €'),
                   const SizedBox(height: 8),
                   Slider.adaptive(
@@ -152,7 +165,7 @@ class _LoanFormState extends State<LoanForm> {
                           padding: EdgeInsets.only(left: 12),
                           child: Align(
                               alignment: Alignment.centerLeft,
-                              child: Text('6 months')),
+                              child: Text('12 months')),
                         ),
                       ),
                       Expanded(
